@@ -1,0 +1,83 @@
+image: python:3.7.4-alpine3.10
+pipelines:
+  branches:
+    develop:
+      - step:
+          services:
+            - docker
+          caches:
+            - docker
+          script:
+            - pip3 install awscli
+            - IMAGE="99.dkr.ecr.ap-south-1.amazonaws.com/kyc_poc_repository"
+            - TAG=${BITBUCKET_BRANCH:-$BITBUCKET_TAG}
+            - aws configure set aws_access_key_id "AKIAY3SVM6JRJCV6AZHN"
+            - aws configure set aws_secret_access_key "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"
+            - mkdir /config_s3
+            - aws s3 cp s3://sm-profile-configuration/kyc/develop/config_prod.json /config_s3/
+            - cp -f /config_s3/config_prod.json .
+            - cp -f /config_s3/config_prod.json modules/
+            - aws ecr get-login-password --region ap-south-1 | docker login --username AWS --password-stdin 99.dkr.ecr.ap-south-1.amazonaws.com
+            - docker build -t kyc_poc_repository .
+            - docker tag kyc_poc_repository:latest 99.dkr.ecr.ap-south-1.amazonaws.com/kyc_poc_repository:latest
+            - docker push 99.dkr.ecr.ap-south-1.amazonaws.com/kyc_poc_repository:latest
+    quality:
+      - step:
+          services:
+            - docker
+          caches:
+            - docker
+          script:
+            - pip3 install awscli
+            - IMAGE="99.dkr.ecr.ap-south-1.amazonaws.com/kyc-quality-repository"
+            - TAG=${BITBUCKET_BRANCH:-$BITBUCKET_TAG}
+            - aws configure set aws_access_key_id "AKIAY3SVM6JRJCV6AZHN"
+            - aws configure set aws_secret_access_key "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"
+            - mkdir /config_s3
+            - aws s3 cp s3://sm-profile-configuration/kyc/quality/config_prod.json /config_s3/
+            - cp -f /config_s3/config_prod.json .
+            - cp -f /config_s3/config_prod.json modules/
+            - aws ecr get-login-password --region ap-south-1 | docker login --username AWS --password-stdin 99.dkr.ecr.ap-south-1.amazonaws.com
+            - docker build -t kyc-quality-repository .
+            - docker tag kyc-quality-repository:latest 99.dkr.ecr.ap-south-1.amazonaws.com/kyc-quality-repository:latest
+            - docker push 99.dkr.ecr.ap-south-1.amazonaws.com/kyc-quality-repository:latest
+    master:
+      - step:
+          services:
+            - docker
+          caches:
+            - docker
+          script:
+            - pip3 install awscli
+            - IMAGE="99.dkr.ecr.ap-south-1.amazonaws.com/kyc-prod-repository"
+            - TAG=${BITBUCKET_BRANCH:-$BITBUCKET_TAG}
+            - aws configure set aws_access_key_id "AKIAY3SVM6JRJCV6AZHN"
+            - aws configure set aws_secret_access_key "99"
+            - mkdir /config_s3
+            - aws s3 cp s3://sm-profile-configuration/kyc/production/config_prod.json /config_s3/
+            - cp -f /config_s3/config_prod.json .
+            - cp -f /config_s3/config_prod.json modules/
+            - aws ecr get-login-password --region ap-south-1 | docker login --username AWS --password-stdin 99.dkr.ecr.ap-south-1.amazonaws.com
+            - docker build -t kyc-prod-repository .
+            - docker tag kyc-prod-repository:latest 99.dkr.ecr.ap-south-1.amazonaws.com/kyc-prod-repository:latest
+            - docker push 99.dkr.ecr.ap-south-1.amazonaws.com/kyc-prod-repository:latest
+    sandbox:
+      - step:
+          services:
+            - docker
+          caches:
+            - docker
+          script:
+            - pip3 install awscli
+            - IMAGE="99.dkr.ecr.ap-south-1.amazonaws.com/kyc-prod-repository"
+            - TAG=${BITBUCKET_BRANCH:-$BITBUCKET_TAG}
+            - aws configure set aws_access_key_id "99"
+            - aws configure set aws_secret_access_key "99"
+            - mkdir /config_s3
+            - aws s3 cp s3://sm-profile-configuration/kyc/sandbox/config_prod.json /config_s3/
+            - cp -f /config_s3/config_prod.json .
+            - cp -f /config_s3/config_prod.json modules/
+            - aws ecr get-login-password --region ap-south-1 | docker login --username AWS --password-stdin 99.dkr.ecr.ap-south-1.amazonaws.com
+            - docker build -t kyc-sandbox-repository .
+            - docker tag kyc-sandbox-repository:latest 99.dkr.ecr.ap-south-1.amazonaws.com/kyc-sandbox-repository:latest
+            - docker push 99.dkr.ecr.ap-south-1.amazonaws.com/kyc-sandbox-repository:latest
