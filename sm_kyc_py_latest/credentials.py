@@ -1,5 +1,5 @@
 credential= {
-         "clientId": '85a55d204c3fc467764f1985205aaa67',
+         "clientId": '85a55d204c3fc467764f198GH5205aaa67',
          "clientCode": 'Score-Me',
         }
 
